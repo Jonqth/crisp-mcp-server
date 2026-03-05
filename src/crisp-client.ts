@@ -1,4 +1,4 @@
-import Crisp from "crisp-api";
+import { Crisp } from "crisp-api";
 import * as dotenv from "dotenv";
 
 dotenv.config();

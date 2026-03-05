@@ -55,7 +55,7 @@ export async function handleSearchConversations(
     };
   }
 
-  const lines = conversations.map((c, i) => {
+  const lines = conversations.map((c: any, i: number) => {
     const email = c.meta?.email || "unknown";
     const lastMsg = c.last_message
       ? truncate(c.last_message)
@@ -91,7 +91,7 @@ export async function handleGetConversation(
 
   const limitedMessages = messages.slice(-messages_limit);
 
-  const messageLines = limitedMessages.map((m) => {
+  const messageLines = limitedMessages.map((m: any) => {
     const author =
       m.from === "operator"
         ? m.user?.nickname || "Operator"
@@ -140,7 +140,7 @@ export async function handleListConversations(
     };
   }
 
-  const lines = conversations.map((c, i) => {
+  const lines = conversations.map((c: any, i: number) => {
     const email = c.meta?.email || "unknown";
     const lastMsg = c.last_message
       ? truncate(c.last_message)

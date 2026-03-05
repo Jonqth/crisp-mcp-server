@@ -20,21 +20,37 @@ Two authentication modes are supported:
 
 #### Option A: Plugin tier (recommended for integrations)
 
-Create a plugin on [marketplace.crisp.chat](https://marketplace.crisp.chat):
+1. Go to [marketplace.crisp.chat](https://marketplace.crisp.chat) and sign in (or create a Marketplace account — separate from your main Crisp account)
+2. Click **New Plugin** → choose **Private**
+3. Name your plugin (e.g. "MCP Server") and click **Create**
+4. Go to the **Tokens** tab → scroll to **Production** → click **Ask a production token**
+5. Select the required scopes:
+   - `website:conversation:sessions` (list/search conversations)
+   - `website:conversation:messages` (read messages)
+   - `website:conversation:participants` (read participants)
+   - `website:analytics` (analytics & metrics)
+   - `website:operator` (operator stats)
+6. Explain your use case and submit — approval usually takes a few minutes
+7. Once approved, copy your **Production token keypair**:
+   - **Identifier** → `CRISP_IDENTIFIER`
+   - **Key** → `CRISP_KEY`
+8. Go to the **Settings** tab → copy the **Private install link** and open it to install the plugin on your website
+9. Find your **Website ID**: in [app.crisp.chat](https://app.crisp.chat) go to **Settings → Website Settings** → copy the ID from the URL → `CRISP_WEBSITE_ID`
+10. Set `CRISP_TIER=plugin` (default)
 
-- **Plugin ID** → `CRISP_IDENTIFIER`
-- **Plugin Secret Key** → `CRISP_KEY`
-- Set `CRISP_TIER=plugin` (default)
-
-> **Important:** When creating your plugin token, make sure to request all the scopes you need. For analytics, you must include `website:analytics`. If a scope is missing, create a new token with the required scopes from the [Crisp Marketplace dashboard](https://marketplace.crisp.chat).
+> **Keep your token keypair private.** If compromised, roll it immediately from your Marketplace dashboard.
 
 #### Option B: User tier (full access)
 
-Use your operator credentials for full access to all API routes including analytics:
+Use your operator credentials for full access to all API routes including analytics. No scope configuration needed.
 
-- **Email** → `CRISP_IDENTIFIER`
-- **User token** → `CRISP_KEY`
-- Set `CRISP_TIER=user`
+1. Sign in to [app.crisp.chat](https://app.crisp.chat)
+2. Go to **Settings → Account Settings → API Token** and generate a token
+3. Configure:
+   - **Email** → `CRISP_IDENTIFIER`
+   - **User token** → `CRISP_KEY`
+   - Set `CRISP_TIER=user`
+4. Find your **Website ID**: go to **Settings → Website Settings** → copy the ID from the URL → `CRISP_WEBSITE_ID`
 
 > User tier gives access to all routes but is less suited for automated/production use.
 

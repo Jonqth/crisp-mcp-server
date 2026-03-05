@@ -16,43 +16,35 @@ MCP (Model Context Protocol) server for [Crisp.chat](https://crisp.chat) — all
 
 ### 1. Crisp credentials
 
-Two authentication modes are supported:
+All credentials are created via the [Crisp Marketplace](https://marketplace.crisp.chat).
 
-#### Option A: Plugin tier (recommended for integrations)
+#### Create a plugin and get your token
 
-1. Go to [marketplace.crisp.chat](https://marketplace.crisp.chat) and sign in (or create a Marketplace account — separate from your main Crisp account)
+1. Go to [marketplace.crisp.chat](https://marketplace.crisp.chat) and sign in (or create a Marketplace account — this is separate from your main Crisp account)
 2. Click **New Plugin** → choose **Private**
 3. Name your plugin (e.g. "MCP Server") and click **Create**
 4. Go to the **Tokens** tab → scroll to **Production** → click **Ask a production token**
-5. Select the required scopes:
-   - `website:conversation:sessions` (list/search conversations)
-   - `website:conversation:messages` (read messages)
-   - `website:conversation:participants` (read participants)
-   - `website:analytics` (analytics & metrics)
-   - `website:operator` (operator stats)
-6. Explain your use case and submit — approval usually takes a few minutes
+5. Select the required scopes (read-only):
+   - `website:conversation:sessions` — list and search conversations
+   - `website:conversation:messages` — read messages
+   - `website:conversation:participants` — read participants
+   - `website:analytics` — analytics and metrics
+   - `website:operator` — operator info
+6. Explain your use case (e.g. "Read-only MCP server for AI assistant") and submit — approval usually takes a few minutes
 7. Once approved, copy your **Production token keypair**:
    - **Identifier** → `CRISP_IDENTIFIER`
    - **Key** → `CRISP_KEY`
 8. Go to the **Settings** tab → copy the **Private install link** and open it to install the plugin on your website
-9. Find your **Website ID**: in [app.crisp.chat](https://app.crisp.chat) go to **Settings → Website Settings** → copy the ID from the URL → `CRISP_WEBSITE_ID`
-10. Set `CRISP_TIER=plugin` (default)
 
 > **Keep your token keypair private.** If compromised, roll it immediately from your Marketplace dashboard.
+>
+> If you get permission errors on certain routes, your token is missing the required scope. Create a new production token with all the scopes listed above.
 
-#### Option B: User tier (full access)
-
-Use your operator credentials for full access to all API routes including analytics. No scope configuration needed.
+#### Find your Website ID
 
 1. Sign in to [app.crisp.chat](https://app.crisp.chat)
-2. Go to **Settings → Account Settings → API Token** and generate a token
-3. Configure:
-   - **Email** → `CRISP_IDENTIFIER`
-   - **User token** → `CRISP_KEY`
-   - Set `CRISP_TIER=user`
-4. Find your **Website ID**: go to **Settings → Website Settings** → copy the ID from the URL → `CRISP_WEBSITE_ID`
-
-> User tier gives access to all routes but is less suited for automated/production use.
+2. Go to **Settings → Website Settings**
+3. Copy the Website ID from the URL → `CRISP_WEBSITE_ID`
 
 ### 2. Deploy on Railway
 
@@ -63,9 +55,8 @@ Set the following environment variables:
 | Variable | Value |
 |---|---|
 | `MCP_TRANSPORT` | `http` |
-| `CRISP_TIER` | `plugin` or `user` |
-| `CRISP_IDENTIFIER` | Plugin ID or email |
-| `CRISP_KEY` | Plugin Secret or user token |
+| `CRISP_IDENTIFIER` | Your Plugin Identifier |
+| `CRISP_KEY` | Your Plugin Key |
 | `CRISP_WEBSITE_ID` | Your Website ID |
 
 Build command: `npm install && npm run build`
@@ -95,9 +86,8 @@ No deploy needed. Add to `~/Library/Application Support/Claude/claude_desktop_co
       "command": "node",
       "args": ["/path/to/crisp-mcp-server/dist/index.js"],
       "env": {
-        "CRISP_TIER": "plugin",
-        "CRISP_IDENTIFIER": "your_plugin_id",
-        "CRISP_KEY": "your_plugin_secret",
+        "CRISP_IDENTIFIER": "your_plugin_identifier",
+        "CRISP_KEY": "your_plugin_key",
         "CRISP_WEBSITE_ID": "your_website_id"
       }
     }

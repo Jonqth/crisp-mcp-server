@@ -1,27 +1,58 @@
 import { z } from "zod";
 import CrispClient, { WEBSITE_ID } from "../crisp-client.js";
-import { formatDuration } from "../utils/formatters.js";
 
 // --- Tool definitions ---
 
+const metricEnum = z.enum([
+  "conversation",
+  "conversation_assigned",
+  "conversation_shortcut",
+  "conversation_segment",
+  "helpdesk_read",
+  "helpdesk_search",
+  "visitor_visit",
+  "visitor_trigger",
+  "campaign_activity",
+  "campaign_sent",
+  "people_created",
+  "status_downtime",
+]);
+
+const typeEnum = z.enum([
+  "total",
+  "unique",
+  "response_time",
+  "resolution_time",
+  "handle_time",
+  "messages",
+  "visitor_messages",
+  "operator_messages",
+  "rating",
+]);
+
 export const getAnalyticsInputSchema = z.object({
+  metric: metricEnum.describe(
+    "Analytics metric to query (e.g. conversation, visitor_visit, helpdesk_read)"
+  ),
+  type: typeEnum.describe(
+    "Analytics type: total, unique, response_time, resolution_time, handle_time, messages, rating, etc."
+  ),
   date_from: z
     .string()
-    .describe("Start date in ISO 8601 format (e.g. 2026-02-01)"),
+    .describe("Start date in ISO 8601 format (e.g. 2026-01-01T00:00:00Z)"),
   date_to: z
     .string()
-    .describe("End date in ISO 8601 format (e.g. 2026-03-01)"),
-  metrics: z
-    .array(
-      z.enum([
-        "conversations_total",
-        "response_time",
-        "resolution_time",
-        "csat_score",
-      ])
-    )
+    .describe("End date in ISO 8601 format (e.g. 2026-02-01T00:00:00Z)"),
+  date_split: z
+    .enum(["hour", "day", "week", "month"])
     .optional()
-    .describe("Metrics to return (all if not specified)"),
+    .default("day")
+    .describe("Date split granularity (default: day)"),
+  timezone: z
+    .string()
+    .optional()
+    .default("Europe/Paris")
+    .describe("Timezone (default: Europe/Paris)"),
 });
 
 export const getOperatorStatsInputSchema = z.object({
@@ -38,53 +69,27 @@ export const getOperatorStatsInputSchema = z.object({
 export async function handleGetAnalytics(
   args: z.infer<typeof getAnalyticsInputSchema>
 ) {
-  const { date_from, date_to, metrics } = args;
+  const { metric, type, date_from, date_to, date_split, timezone } = args;
 
   const analytics = await CrispClient.website.generateAnalytics(WEBSITE_ID!, {
-    date_from: Math.floor(new Date(date_from).getTime() / 1000),
-    date_to: Math.floor(new Date(date_to).getTime() / 1000),
-    metrics: metrics || [
-      "conversations_total",
-      "response_time",
-      "resolution_time",
-    ],
+    metric,
+    type,
+    date: {
+      from: date_from,
+      to: date_to,
+      split: date_split,
+      timezone,
+    },
   });
 
-  const lines: string[] = [
-    `Crisp metrics from ${date_from} to ${date_to}:`,
-    "",
-  ];
+  const text = [
+    `Analytics: ${metric} / ${type}`,
+    `Period: ${date_from} to ${date_to} (split by ${date_split})`,
+    ``,
+    JSON.stringify(analytics, null, 2),
+  ].join("\n");
 
-  if (analytics.conversations_total !== undefined) {
-    lines.push(`Total conversations: ${analytics.conversations_total}`);
-  }
-  if (analytics.response_time !== undefined) {
-    lines.push(`Avg response time: ${formatDuration(analytics.response_time)}`);
-  }
-  if (analytics.resolution_time !== undefined) {
-    lines.push(
-      `Avg resolution time: ${formatDuration(analytics.resolution_time)}`
-    );
-  }
-  if (analytics.csat_score !== undefined) {
-    lines.push(`CSAT score: ${analytics.csat_score}`);
-  }
-
-  // Include any other returned metrics
-  for (const [key, value] of Object.entries(analytics)) {
-    if (
-      ![
-        "conversations_total",
-        "response_time",
-        "resolution_time",
-        "csat_score",
-      ].includes(key)
-    ) {
-      lines.push(`${key}: ${JSON.stringify(value)}`);
-    }
-  }
-
-  return { content: [{ type: "text" as const, text: lines.join("\n") }] };
+  return { content: [{ type: "text" as const, text }] };
 }
 
 export async function handleGetOperatorStats(

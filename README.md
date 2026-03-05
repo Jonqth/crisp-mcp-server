@@ -16,11 +16,27 @@ MCP (Model Context Protocol) server for [Crisp.chat](https://crisp.chat) — all
 
 ### 1. Crisp credentials
 
-Create a plugin on [marketplace.crisp.chat](https://marketplace.crisp.chat) to get your credentials:
+Two authentication modes are supported:
+
+#### Option A: Plugin tier (recommended for integrations)
+
+Create a plugin on [marketplace.crisp.chat](https://marketplace.crisp.chat):
 
 - **Plugin ID** → `CRISP_IDENTIFIER`
 - **Plugin Secret Key** → `CRISP_KEY`
-- **Website ID** (Settings → Website Settings) → `CRISP_WEBSITE_ID`
+- Set `CRISP_TIER=plugin` (default)
+
+> **Important:** When creating your plugin token, make sure to request all the scopes you need. For analytics, you must include `website:analytics`. If a scope is missing, create a new token with the required scopes from the [Crisp Marketplace dashboard](https://marketplace.crisp.chat).
+
+#### Option B: User tier (full access)
+
+Use your operator credentials for full access to all API routes including analytics:
+
+- **Email** → `CRISP_IDENTIFIER`
+- **User token** → `CRISP_KEY`
+- Set `CRISP_TIER=user`
+
+> User tier gives access to all routes but is less suited for automated/production use.
 
 ### 2. Deploy on Railway
 
@@ -31,8 +47,9 @@ Set the following environment variables:
 | Variable | Value |
 |---|---|
 | `MCP_TRANSPORT` | `http` |
-| `CRISP_IDENTIFIER` | Your Plugin ID |
-| `CRISP_KEY` | Your Plugin Secret Key |
+| `CRISP_TIER` | `plugin` or `user` |
+| `CRISP_IDENTIFIER` | Plugin ID or email |
+| `CRISP_KEY` | Plugin Secret or user token |
 | `CRISP_WEBSITE_ID` | Your Website ID |
 
 Build command: `npm install && npm run build`
@@ -62,6 +79,7 @@ No deploy needed. Add to `~/Library/Application Support/Claude/claude_desktop_co
       "command": "node",
       "args": ["/path/to/crisp-mcp-server/dist/index.js"],
       "env": {
+        "CRISP_TIER": "plugin",
         "CRISP_IDENTIFIER": "your_plugin_id",
         "CRISP_KEY": "your_plugin_secret",
         "CRISP_WEBSITE_ID": "your_website_id"

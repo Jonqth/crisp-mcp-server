@@ -1,11 +1,9 @@
 #!/usr/bin/env node
 
-import { randomUUID } from "node:crypto";
 import express from "express";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 
 import {
   searchConversationsInputSchema,
@@ -26,10 +24,18 @@ import {
 function createServer(): McpServer {
   const server = new McpServer(
     { name: "crisp-mcp-server", version: "1.0.0" },
-    { capabilities: { tools: {} } }
+    {
+      instructions: `
+        This server exposes tools to interact with the Crisp customer messaging platform. Use it to:
+        - Search conversations by text or segment
+        - Get conversation details and messages
+        - List conversations filtered by status
+        - Get analytics and metrics for a date range
+        - Get operator performance stats
+      `,
+    }
   );
 
-  // Search tools
   server.registerTool(
     "search_conversations",
     {
@@ -60,7 +66,6 @@ function createServer(): McpServer {
     async (args) => handleListConversations(args)
   );
 
-  // Analytics tools
   server.registerTool(
     "get_analytics",
     {
@@ -84,11 +89,13 @@ function createServer(): McpServer {
   return server;
 }
 
-// --- HTTP mode (Railway / remote) ---
+// --- HTTP mode (Railway / Crisp integration) ---
 
 function startHttpServer() {
   const app = express();
   app.use(express.json());
+
+  const server = createServer();
 
   const API_TOKEN = process.env.MCP_API_TOKEN;
   if (!API_TOKEN) {
@@ -97,84 +104,51 @@ function startHttpServer() {
     );
   }
 
-  // Bearer token auth middleware for /mcp routes
-  function authMiddleware(
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
-  ) {
-    if (!API_TOKEN) return next();
-    const auth = req.headers.authorization;
-    if (auth !== `Bearer ${API_TOKEN}`) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
-    next();
-  }
+  app.get("/", (_req, res) => {
+    res.send(
+      "Crisp MCP Server is running. Use the /mcp endpoint to interact with this MCP server."
+    );
+  });
 
-  // Session storage
-  const transports: Record<string, StreamableHTTPServerTransport> = {};
-
-  // Health check (no auth needed)
   app.get("/health", (_req, res) => {
-    res.json({ status: "ok", server: "crisp-mcp-server" });
+    res.status(200).send("OK");
   });
 
-  // POST /mcp — handle MCP requests
-  app.post("/mcp", authMiddleware, async (req, res) => {
-    const sessionId = req.headers["mcp-session-id"] as string | undefined;
-
-    // Existing session
-    if (sessionId && transports[sessionId]) {
-      await transports[sessionId].handleRequest(req, res, req.body);
-      return;
+  app.post("/mcp", (req, res) => {
+    // Bearer token auth
+    if (API_TOKEN) {
+      const auth = req.headers.authorization;
+      if (auth !== `Bearer ${API_TOKEN}`) {
+        res.status(401).json({ error: "Unauthorized" });
+        return;
+      }
     }
 
-    // New session (must be initialize request)
-    if (!sessionId && isInitializeRequest(req.body)) {
-      const transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: () => randomUUID(),
-        onsessioninitialized: (sid) => {
-          transports[sid] = transport;
-        },
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: undefined,
+      enableJsonResponse: true,
+    });
+
+    res.on("close", () => {
+      transport.close();
+    });
+
+    server
+      .connect(transport)
+      .then(() => transport.handleRequest(req, res, req.body))
+      .catch((error: unknown) => {
+        console.error("MCP request error:", error);
+
+        if (!res.headersSent) {
+          res.status(500).json({ error: "MCP request failed" });
+        }
       });
-
-      transport.onclose = () => {
-        if (transport.sessionId) delete transports[transport.sessionId];
-      };
-
-      const server = createServer();
-      await server.connect(transport);
-      await transport.handleRequest(req, res, req.body);
-      return;
-    }
-
-    res.status(400).json({ error: "Invalid request: missing session or not an initialize request" });
   });
 
-  // GET /mcp — SSE streams
-  app.get("/mcp", authMiddleware, async (req, res) => {
-    const sessionId = req.headers["mcp-session-id"] as string;
-    if (!sessionId || !transports[sessionId]) {
-      res.status(400).json({ error: "Invalid or missing session" });
-      return;
-    }
-    await transports[sessionId].handleRequest(req, res);
-  });
+  const port = Number.parseInt(process.env.PORT ?? "3000", 10);
 
-  // DELETE /mcp — session termination
-  app.delete("/mcp", authMiddleware, async (req, res) => {
-    const sessionId = req.headers["mcp-session-id"] as string;
-    if (sessionId && transports[sessionId]) {
-      await transports[sessionId].handleRequest(req, res);
-    } else {
-      res.status(400).json({ error: "Invalid or missing session" });
-    }
-  });
-
-  const port = parseInt(process.env.PORT || "3000", 10);
-  app.listen(port, "0.0.0.0", () => {
-    console.error(`Crisp MCP Server running on http://0.0.0.0:${port}/mcp`);
+  app.listen(port, () => {
+    console.log(`Crisp MCP Server running on http://localhost:${port}/mcp`);
   });
 }
 

@@ -21,6 +21,8 @@ import {
   handleGetOperatorStats,
 } from "./tools/analytics.js";
 
+import { safeTool } from "./utils/error-handler.js";
+
 function createServer(): McpServer {
   const server = new McpServer(
     { name: "crisp-mcp-server", version: "1.0.0" },
@@ -43,7 +45,7 @@ function createServer(): McpServer {
         "Search Crisp conversations by text or segment. Returns matching conversations with contact info and status.",
       inputSchema: searchConversationsInputSchema,
     },
-    async (args) => handleSearchConversations(args)
+    async (args) => safeTool(() => handleSearchConversations(args))
   );
 
   server.registerTool(
@@ -53,7 +55,7 @@ function createServer(): McpServer {
         "Get the details of a specific conversation and its messages by session ID.",
       inputSchema: getConversationInputSchema,
     },
-    async (args) => handleGetConversation(args)
+    async (args) => safeTool(() => handleGetConversation(args))
   );
 
   server.registerTool(
@@ -63,7 +65,7 @@ function createServer(): McpServer {
         "List Crisp conversations with optional status filter (pending, unresolved, resolved).",
       inputSchema: listConversationsInputSchema,
     },
-    async (args) => handleListConversations(args)
+    async (args) => safeTool(() => handleListConversations(args))
   );
 
   server.registerTool(
@@ -73,7 +75,7 @@ function createServer(): McpServer {
         "Get Crisp analytics and metrics for a date range: total conversations, response time, resolution time, CSAT score.",
       inputSchema: getAnalyticsInputSchema,
     },
-    async (args) => handleGetAnalytics(args)
+    async (args) => safeTool(() => handleGetAnalytics(args))
   );
 
   server.registerTool(
@@ -83,7 +85,7 @@ function createServer(): McpServer {
         "Get operator performance stats for a given date range.",
       inputSchema: getOperatorStatsInputSchema,
     },
-    async (args) => handleGetOperatorStats(args)
+    async (args) => safeTool(() => handleGetOperatorStats(args))
   );
 
   return server;

@@ -97,13 +97,6 @@ function startHttpServer() {
 
   const server = createServer();
 
-  const API_TOKEN = process.env.MCP_API_TOKEN;
-  if (!API_TOKEN) {
-    console.error(
-      "WARNING: MCP_API_TOKEN is not set. The server is exposed without authentication!"
-    );
-  }
-
   app.get("/", (_req, res) => {
     res.send(
       "Crisp MCP Server is running. Use the /mcp endpoint to interact with this MCP server."
@@ -115,15 +108,6 @@ function startHttpServer() {
   });
 
   app.post("/mcp", (req, res) => {
-    // Bearer token auth
-    if (API_TOKEN) {
-      const auth = req.headers.authorization;
-      if (auth !== `Bearer ${API_TOKEN}`) {
-        res.status(401).json({ error: "Unauthorized" });
-        return;
-      }
-    }
-
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
       enableJsonResponse: true,

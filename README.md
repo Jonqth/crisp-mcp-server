@@ -1,6 +1,6 @@
 # Crisp MCP Server
 
-MCP (Model Context Protocol) server for [Crisp.chat](https://crisp.chat) — allows Claude and other LLMs to search conversations, retrieve messages, and access analytics from your Crisp workspace.
+MCP (Model Context Protocol) server for [Crisp.chat](https://crisp.chat) — allows Claude and other LLMs to search and read conversations from your Crisp workspace. All tools are read-only.
 
 ## Tools
 
@@ -9,8 +9,6 @@ MCP (Model Context Protocol) server for [Crisp.chat](https://crisp.chat) — all
 | `search_conversations` | Search conversations by text or segment |
 | `get_conversation` | Get conversation details and messages by session ID |
 | `list_conversations` | List conversations with optional status filter |
-| `get_analytics` | Get metrics for a date range (conversations, response time, CSAT...) |
-| `get_operator_stats` | Get operator performance stats |
 
 ## Setup
 
@@ -28,8 +26,6 @@ All credentials are created via the [Crisp Marketplace](https://marketplace.cris
    - `website:conversation:sessions` — list and search conversations
    - `website:conversation:messages` — read messages
    - `website:conversation:participants` — read participants
-   - `website:analytics` — analytics and metrics
-   - `website:operator` — operator info
 6. Explain your use case (e.g. "Read-only MCP server for AI assistant") and submit — approval usually takes a few minutes
 7. Once approved, copy your **Production token keypair**:
    - **Identifier** → `CRISP_IDENTIFIER`

@@ -14,13 +14,6 @@ import {
   handleListConversations,
 } from "./tools/search.js";
 
-import {
-  getAnalyticsInputSchema,
-  getOperatorStatsInputSchema,
-  handleGetAnalytics,
-  handleGetOperatorStats,
-} from "./tools/analytics.js";
-
 import { safeTool } from "./utils/error-handler.js";
 
 function createServer(): McpServer {
@@ -28,12 +21,10 @@ function createServer(): McpServer {
     { name: "crisp-mcp-server", version: "1.0.0" },
     {
       instructions: `
-        This server exposes tools to interact with the Crisp customer messaging platform. Use it to:
+        This server exposes read-only tools to interact with the Crisp customer messaging platform. Use it to:
         - Search conversations by text or segment
         - Get conversation details and messages
         - List conversations filtered by status
-        - Get analytics and metrics for a date range
-        - Get operator performance stats
       `,
     }
   );
@@ -69,28 +60,6 @@ function createServer(): McpServer {
       annotations: { readOnlyHint: true },
     },
     async (args) => safeTool(() => handleListConversations(args))
-  );
-
-  server.registerTool(
-    "get_analytics",
-    {
-      description:
-        "Get Crisp analytics and metrics for a date range: total conversations, response time, resolution time, CSAT score.",
-      inputSchema: getAnalyticsInputSchema,
-      annotations: { readOnlyHint: true },
-    },
-    async (args) => safeTool(() => handleGetAnalytics(args))
-  );
-
-  server.registerTool(
-    "get_operator_stats",
-    {
-      description:
-        "Get operator performance stats for a given date range.",
-      inputSchema: getOperatorStatsInputSchema,
-      annotations: { readOnlyHint: true },
-    },
-    async (args) => safeTool(() => handleGetOperatorStats(args))
   );
 
   return server;

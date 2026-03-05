@@ -95,8 +95,6 @@ function startHttpServer() {
   const app = express();
   app.use(express.json());
 
-  const server = createServer();
-
   app.get("/", (_req, res) => {
     res.send(
       "Crisp MCP Server is running. Use the /mcp endpoint to interact with this MCP server."
@@ -108,6 +106,8 @@ function startHttpServer() {
   });
 
   app.post("/mcp", (req, res) => {
+    const server = createServer();
+
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
       enableJsonResponse: true,

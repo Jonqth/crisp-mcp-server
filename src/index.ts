@@ -44,6 +44,7 @@ function createServer(): McpServer {
       description:
         "Search Crisp conversations by text or segment. Returns matching conversations with contact info and status.",
       inputSchema: searchConversationsInputSchema,
+      annotations: { readOnlyHint: true },
     },
     async (args) => safeTool(() => handleSearchConversations(args))
   );
@@ -54,6 +55,7 @@ function createServer(): McpServer {
       description:
         "Get the details of a specific conversation and its messages by session ID.",
       inputSchema: getConversationInputSchema,
+      annotations: { readOnlyHint: true },
     },
     async (args) => safeTool(() => handleGetConversation(args))
   );
@@ -64,6 +66,7 @@ function createServer(): McpServer {
       description:
         "List Crisp conversations with optional status filter (pending, unresolved, resolved).",
       inputSchema: listConversationsInputSchema,
+      annotations: { readOnlyHint: true },
     },
     async (args) => safeTool(() => handleListConversations(args))
   );
@@ -74,6 +77,7 @@ function createServer(): McpServer {
       description:
         "Get Crisp analytics and metrics for a date range: total conversations, response time, resolution time, CSAT score.",
       inputSchema: getAnalyticsInputSchema,
+      annotations: { readOnlyHint: true },
     },
     async (args) => safeTool(() => handleGetAnalytics(args))
   );
@@ -84,6 +88,7 @@ function createServer(): McpServer {
       description:
         "Get operator performance stats for a given date range.",
       inputSchema: getOperatorStatsInputSchema,
+      annotations: { readOnlyHint: true },
     },
     async (args) => safeTool(() => handleGetOperatorStats(args))
   );

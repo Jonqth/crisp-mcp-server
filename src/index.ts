@@ -73,7 +73,7 @@ function startHttpServer() {
 
   app.get("/", (_req, res) => {
     res.send(
-      "Crisp MCP Server is running. Use the /mcp endpoint to interact with this MCP server."
+      "Crisp MCP Server is running."
     );
   });
 
@@ -81,7 +81,10 @@ function startHttpServer() {
     res.status(200).send("OK");
   });
 
-  app.post("/mcp", (req, res) => {
+  const SECRET_PATH = process.env.MCP_SECRET_PATH || "mcp";
+  const MCP_ROUTE = `/${SECRET_PATH}`;
+
+  app.post(MCP_ROUTE, (req, res) => {
     const server = createServer();
 
     const transport = new StreamableHTTPServerTransport({
@@ -108,7 +111,7 @@ function startHttpServer() {
   const port = Number.parseInt(process.env.PORT ?? "3000", 10);
 
   app.listen(port, () => {
-    console.log(`Crisp MCP Server running on http://localhost:${port}/mcp`);
+    console.log(`Crisp MCP Server running on http://localhost:${port}${MCP_ROUTE}`);
   });
 }
 
